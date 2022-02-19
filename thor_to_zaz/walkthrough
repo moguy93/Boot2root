@@ -1,0 +1,35 @@
+********************************************************************************
+We are now connected as thor. We can see two files in the home, one is a README
+telling us to solve the challenge. Another one is a file containing movements
+and rotations instructions.
+********************************************************************************
+thor@BornToSecHackMe:~$ ls
+README  turtle
+thor@BornToSecHackMe:~$ head -c200 turtle
+Tourne gauche de 90 degrees
+Avance 50 spaces
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+...
+********************************************************************************
+After quick researches, this is some LOGO langage, usually used for
+programming introduction, the first use of this tool is to draw on a
+screen with theses instructions, just like a pen.
+A python module named turtle allows us to draw some LOGO instructions
+on a window very simply, we just have to provide it the input data.
+Let's scp the turtle file in our host machine, and then use a python script
+to show what message is hidden in this file.
+********************************************************************************
+$> scp -P 22 thor@192.168.0.27:/home/thor/turtle ./
+$> python3 turtle_message.py
+********************************************************************************
+We can see letters drawing in disorder on the screen, forming the "SLASH" word
+by apparition time. Used as a password, it does not provides us access to zaz
+user. After hashing it with different algorithms, we found out that the MD5 hash
+was the key. So now we can get connected as zaz.
+********************************************************************************
