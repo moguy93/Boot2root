@@ -1,0 +1,28 @@
+********************************************************************************
+Another very easy way to get logged in a root shell for this VM is simply to use
+the recovery mode tool, which can give access to a root shell. First we need to
+choose our boot option by halting the normal boot procedure.
+
+With GRUB bootloader installed :
+We can show up boot options by holding the escape key at startup until seeing
+GRUB menu on the screen. From here, we can select the "Advanced Options" pane,
+which will then show us a list of bootable kernels on the boot media. We can
+now boot on a kernel ending with (recovery mode), and then select the "root"
+which will log us into a root shell. This shell should be used for repair only,
+but it is also an available exploit.
+
+Without GRUB :
+We can show up boot options by holding the shift key at
+startup until being prompted with "boot :".
+We can then press the Tab key to ask the shell for boot options (autocompletion).
+We can see that live is available. By typing "live" and hitting enter, we get
+connected to our root shell.
+
+
+ This trick just shows us how safe our data is on our computer : not at all.
+ Literally anyone may boot as root and get access to everything, or simply
+remove the hard drive from the computer and analyze it with another tool,
+whatever the native OS is on installed it. The only way to keep data safe is to
+keep it encrypted when the computer is not in use. A good solution to do that in
+Linux is the LVM (Logical Volume Manager) tool.
+********************************************************************************

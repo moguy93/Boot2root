@@ -1,31 +1,31 @@
 import os
-import time
-from sys import stdout
 
-answer12 = "\"Publicspeakingisveryeasy.12624120720";
-answer3 = "1b214";
-answer4 = "9";
-answer5 = [];
-# ans5 = ["/?O_o", " 0@Pp`", "%5EUe", "+;K[k", "-=M]m", "!1AQaq"]; 
-ans5 = ["o", "p0P", "e5EU", "kK", "Mm", "1AQaq"];
-answer6 = "426135\"";
-cmd_1 = "sshpass -p ";
-cmd_2 = " ssh -o StrictHostKeyChecking=no -p 22 thor@192.168.56.101";
-answers = [];
+charset = "123456"
+combination = "6 5 4 3 2 1 \n"
 
-for j in range(0, 3):
-    for k in range (0, 4):
-        for l in range (0, 2): 
-            for m in range (0, 2):
-                for n in range (0, 5):
-                    tmp = ans5[0][0] + ans5[1][j] + ans5[2][k] + ans5[3][l] + ans5[4][m] + ans5[5][n];
-                    answer5.append(tmp);
+for i in range(123456, 654321):
+    err = False
+    s = str(i)
+    for j in charset:
+        if s.count(j) != 1 or j == '0' or j > '6':
+            err = True
+            break
+    if err == False:
+        for c in s:
+            combination += c + ' '
+        combination += '\n'
 
-for ans5 in answer5:
-    tmp = answer12 + answer3 + answer4 + ans5 + answer6;
-    answers.append(tmp);
+answers="Public speaking is very easy.\n1 2 6 24 120 720\n0 q 777\n9\n?05+-1\n";
 
-for answer in answers:
-    cmd = cmd_1 + answer + cmd_2;
-    os.system(cmd)
-    stdout.write(answer + "\n")
+combs = combination.split('\n');
+
+for i, comb in enumerate(combs):
+    s = str(i)
+
+    cmd_line1 = "print \"" + s + "\n" + comb + "\n\""
+    cmd_line2 =  "\"" + answers + comb + "\n\"" + " > /tmp/exploit"
+    # cmd_line3 = "/tmp/exploit | ./bomb 2&> /tmp/log ; grep -nr -E30 'Congratulations' /tmp/log" 
+    os.system(cmd_line1)
+    os.system(cmd_line2)
+    os.system("chmod 777 /tmp/exploit")
+    # os.system(cmd_line3)
